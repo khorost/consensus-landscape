@@ -589,6 +589,21 @@ body {
   background: var(--bg-secondary);
   border-top: 1px solid var(--border-color);
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+}
+
+.footer-link {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  color: var(--text-primary);
+  text-decoration: underline;
 }
 
 .copyright {

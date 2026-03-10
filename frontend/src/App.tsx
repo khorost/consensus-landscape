@@ -79,6 +79,7 @@ function App() {
       </main>
 
       <footer className="app-footer">
+        <a href="/consensus-landscape/docs/" className="footer-link" target="_blank" rel="noopener">Документация</a>
         <span className="copyright">Consensus Landscape &copy; {new Date().getFullYear()}</span>
       </footer>
     </div>
