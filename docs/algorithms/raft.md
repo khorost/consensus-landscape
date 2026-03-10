@@ -1,5 +1,7 @@
 # Raft
 
+![Raft — выборы лидера и репликация](/img/raft-election.png)
+
 ## Обзор
 
 Raft — алгоритм консенсуса, разработанный Diego Ongaro и John Ousterhout в 2014 году с целью быть **понятнее Paxos** при сохранении тех же гарантий. Raft декомпозирует консенсус на три относительно независимые подзадачи: выборы лидера, репликация лога и безопасность.
@@ -133,5 +135,5 @@ sequenceDiagram
 3. **Ongaro D.** "Consensus: Bridging Theory and Practice" (PhD dissertation, 2014) — [Stanford](https://web.stanford.edu/~ouster/cgi-bin/papers/OngaroPhD.pdf)
 
 ::: tip Попробуйте в симуляторе
-Откройте [симулятор](/consensus-landscape/), выберите Raft, отключите лидер (клик на зелёный узел → «Отключить») и наблюдайте за перевыборами.
+Откройте [симулятор](https://khorost.github.io/consensus-landscape/), выберите Raft, отключите лидер (клик на зелёный узел → «Отключить») и наблюдайте за перевыборами.
 :::

@@ -1,5 +1,7 @@
 # Basic Paxos
 
+![Paxos — двухфазный консенсус](/img/paxos-consensus.png)
+
 ## Обзор
 
 Paxos — алгоритм консенсуса, придуманный Leslie Lamport в 1989 году и опубликованный в 1998 году в статье "The Part-Time Parliament". Это исторически **первый корректно доказанный** алгоритм распределённого консенсуса.
@@ -160,5 +162,5 @@ sequenceDiagram
 3. **Van Renesse R., Altinbuken D.** "Paxos Made Moderately Complex" (2015) — [ACM Computing Surveys](https://doi.org/10.1145/2673577)
 
 ::: tip Попробуйте в симуляторе
-Откройте [симулятор](/consensus-landscape/), выберите Paxos, добавьте вторую панель с Raft и сравните количество сообщений для одной операции записи.
+Откройте [симулятор](https://khorost.github.io/consensus-landscape/), выберите Paxos, добавьте вторую панель с Raft и сравните количество сообщений для одной операции записи.
 :::

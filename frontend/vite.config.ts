@@ -5,6 +5,17 @@ import { execSync } from 'child_process'
 
 const commitHash = execSync('git rev-parse --short HEAD').toString().trim()
 const commitDate = execSync('git log -1 --format=%ci').toString().trim().slice(0, 10)
+const buildRef = (() => {
+  try {
+    return execSync('git describe --tags --exact-match 2>/dev/null').toString().trim()
+  } catch {
+    try {
+      return execSync('git rev-parse --abbrev-ref HEAD').toString().trim()
+    } catch {
+      return 'unknown'
+    }
+  }
+})()
 
 export default defineConfig({
   base: process.env.GITHUB_ACTIONS ? '/consensus-landscape/' : '/',
@@ -12,6 +23,7 @@ export default defineConfig({
   define: {
     __BUILD_HASH__: JSON.stringify(commitHash),
     __BUILD_DATE__: JSON.stringify(commitDate),
+    __BUILD_REF__: JSON.stringify(buildRef),
   },
   test: {
     globals: true,

@@ -4,8 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 
-Интерактивный симулятор алгоритмов консенсуса (Raft, Paxos) для визуального сравнения их поведения. Учебный инструмент для студентов.
+Интерактивный симулятор алгоритмов консенсуса (Raft, Paxos, Multi-Paxos, Zab, EPaxos) для визуального сравнения их поведения. Учебный инструмент для студентов.
 
-**[Открыть симулятор →](https://khorost.github.io/consensus-landscape/)**
+**[Открыть симулятор →](https://khorost.github.io/consensus-landscape/)** | **[Документация →](https://khorost.github.io/consensus-landscape/docs/)**
 
-**[Документация →](https://khorost.github.io/consensus-landscape/docs/)**
+![Consensus Landscape — параллельное сравнение Raft и Paxos](docs/public/img/simulator-screenshot.png)

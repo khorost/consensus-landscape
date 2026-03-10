@@ -149,5 +149,5 @@ sequenceDiagram
 3. **Van Renesse R., Altinbuken D.** "Paxos Made Moderately Complex" (2015) — [ACM Computing Surveys](https://doi.org/10.1145/2673577)
 
 ::: tip Попробуйте в симуляторе
-Откройте [симулятор](/consensus-landscape/), поставьте рядом Multi-Paxos и Basic Paxos. Обратите внимание: после выборов первая команда в Multi-Paxos идёт через Prepare→Accept (2 RTT), а вторая — только через Accept (1 RTT). В Basic Paxos каждая команда всегда проходит оба этапа.
+Откройте [симулятор](https://khorost.github.io/consensus-landscape/), поставьте рядом Multi-Paxos и Basic Paxos. Обратите внимание: после выборов первая команда в Multi-Paxos идёт через Prepare→Accept (2 RTT), а вторая — только через Accept (1 RTT). В Basic Paxos каждая команда всегда проходит оба этапа.
 :::

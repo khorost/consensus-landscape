@@ -113,6 +113,7 @@ export const SimulationPanel: React.FC<SimulationPanelProps> = ({
           clients={state.clients}
           currentTime={state.time}
           onNodeClick={handleNodeClick}
+          selectedNode={selectedNode}
           timeoutProgress={state.timeoutProgress}
           clientConnections={state.clientConnections}
           autoClientTiming={state.autoClientTiming}
