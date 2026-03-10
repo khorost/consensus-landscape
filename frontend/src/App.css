@@ -458,6 +458,18 @@ body {
 
 .node-detail-header h4 {
   font-size: 13px;
+  margin: 0;
+}
+
+.node-detail-close {
+  margin-left: auto;
+  font-size: 11px;
+  opacity: 0.6;
+  line-height: 1;
+}
+
+.node-detail-close:hover {
+  opacity: 1;
 }
 
 .status-badge {

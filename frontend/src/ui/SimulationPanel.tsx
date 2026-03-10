@@ -146,6 +146,7 @@ export const SimulationPanel: React.FC<SimulationPanelProps> = ({
           node={selectedNodeState}
           onKill={killNode}
           onRecover={recoverNode}
+          onClose={() => setSelectedNode(null)}
         />
       </div>
 
