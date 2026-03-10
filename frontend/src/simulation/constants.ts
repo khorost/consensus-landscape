@@ -177,6 +177,15 @@ export const CLIENT_RETRY_DELAY_JITTER = 200;
  */
 export const DEAD_NODE_RETRY_DELAY = 100;
 
+/**
+ * Fraction of travel time at which a message is logically delivered
+ * (visually reaching the node edge rather than center).
+ * The animation dot flies from source center, and at this fraction
+ * the message triggers the algorithm handler. The dot continues
+ * briefly to the center for visual smoothness.
+ */
+export const MESSAGE_EDGE_DELIVERY_FRACTION = 0.85;
+
 // ============================================================================
 // Animation loop & auto-client
 // ============================================================================

@@ -2,6 +2,9 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { SimulationEngine, ActiveMessage, ClientConnection } from '../simulation/engine';
 import { RaftAlgorithm } from '../simulation/algorithms/raft';
 import { PaxosAlgorithm } from '../simulation/algorithms/paxos';
+import { MultiPaxosAlgorithm } from '../simulation/algorithms/multi-paxos';
+import { ZabAlgorithm } from '../simulation/algorithms/zab';
+import { EPaxosAlgorithm } from '../simulation/algorithms/epaxos';
 import { ClusterConfig, NodeId, NodeState, SimulationMetrics, LiveStats, ClientState } from '../simulation/types';
 import { ConsensusAlgorithm } from '../simulation/algorithms/interface';
 import {
@@ -11,7 +14,7 @@ import {
   NetworkProfile, NETWORK_PROFILES,
 } from '../simulation/constants';
 
-export type AlgorithmType = 'raft' | 'paxos';
+export type AlgorithmType = 'raft' | 'paxos' | 'multi-paxos' | 'zab' | 'epaxos';
 
 export type TimeoutProgressMap = Map<NodeId, { type: string; progress: number }[]>;
 
@@ -34,6 +37,9 @@ function createAlgorithm(type: AlgorithmType): ConsensusAlgorithm {
   switch (type) {
     case 'raft': return new RaftAlgorithm();
     case 'paxos': return new PaxosAlgorithm();
+    case 'multi-paxos': return new MultiPaxosAlgorithm();
+    case 'zab': return new ZabAlgorithm();
+    case 'epaxos': return new EPaxosAlgorithm();
   }
 }
 

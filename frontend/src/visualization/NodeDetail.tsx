@@ -5,9 +5,10 @@ interface NodeDetailProps {
   node: NodeState | null;
   onKill?: (id: NodeId) => void;
   onRecover?: (id: NodeId) => void;
+  onClose?: () => void;
 }
 
-export const NodeDetail: React.FC<NodeDetailProps> = React.memo(({ node, onKill, onRecover }) => {
+export const NodeDetail: React.FC<NodeDetailProps> = React.memo(({ node, onKill, onRecover, onClose }) => {
   if (!node) {
     return (
       <div className="node-detail empty">
@@ -25,6 +26,7 @@ export const NodeDetail: React.FC<NodeDetailProps> = React.memo(({ node, onKill,
         <span className={`status-badge ${node.status}`}>
           {isAlive ? node.role : 'отключён'}
         </span>
+        <button className="btn btn-xs node-detail-close" onClick={onClose} title="Закрыть">✕</button>
       </div>
 
       <div className="node-detail-actions">
@@ -62,7 +64,7 @@ export const NodeDetail: React.FC<NodeDetailProps> = React.memo(({ node, onKill,
         <div className="node-log">
           <h5>Лог</h5>
           <div className="log-entries">
-            {node.log.slice(-10).map((entry, i) => (
+            {node.log.slice(-10).reverse().map((entry, i) => (
               <div
                 key={i}
                 className={`log-entry ${entry.committed ? 'committed' : 'pending'}`}

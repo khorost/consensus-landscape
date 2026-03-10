@@ -79,7 +79,9 @@ function App() {
       </main>
 
       <footer className="app-footer">
+        <a href="/consensus-landscape/docs/" className="footer-link" target="_blank" rel="noopener">Документация</a>
         <span className="copyright">Consensus Landscape &copy; {new Date().getFullYear()}</span>
+        <span className="build-label" title={`Build ${__BUILD_HASH__} (${__BUILD_DATE__})`}>{__BUILD_HASH__}</span>
       </footer>
     </div>
   );

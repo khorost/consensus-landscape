@@ -24,6 +24,12 @@ const ROLE_COLORS: Record<string, { fill: string; stroke: string; label: string 
   proposer:  { fill: 'var(--node-candidate)', stroke: 'var(--node-candidate-stroke)', label: 'P' },
   acceptor:  { fill: 'var(--node-follower)',  stroke: 'var(--node-follower-stroke)',  label: 'A' },
   learner:   { fill: 'var(--node-follower)',  stroke: 'var(--node-follower-stroke)',  label: 'Ln' },
+  // Zab roles
+  looking:   { fill: 'var(--node-candidate)', stroke: 'var(--node-candidate-stroke)', label: 'E' },
+  leading:   { fill: 'var(--node-leader)',    stroke: 'var(--node-leader-stroke)',    label: 'ZL' },
+  following: { fill: 'var(--node-follower)',  stroke: 'var(--node-follower-stroke)',  label: 'ZF' },
+  // EPaxos role
+  replica:   { fill: 'var(--node-follower)',  stroke: 'var(--node-follower-stroke)',  label: 'R' },
 };
 
 /** Message visual config: shape, color, size */
@@ -53,6 +59,27 @@ const MSG_VISUALS: Record<string, MsgVisual> = {
   nack: { color: 'var(--msg-nack)', shape: 'diamond', size: 4, label: '✗' },
   // Paxos learn — green circle (committed notification)
   learn: { color: 'var(--msg-replication)', shape: 'circle', size: 4, label: 'L' },
+  // Multi-Paxos heartbeat
+  mp_heartbeat:          { color: 'var(--msg-replication)', shape: 'circle',  size: 3, label: '' },
+  mp_heartbeat_response: { color: 'var(--msg-replication)', shape: 'circle',  size: 2, label: '' },
+  // Zab election
+  zab_election:      { color: 'var(--msg-vote)',        shape: 'diamond',  size: 5, label: 'E' },
+  zab_election_ack:  { color: 'var(--msg-vote)',        shape: 'diamond',  size: 4, label: '' },
+  zab_followerinfo:  { color: 'var(--msg-vote)',        shape: 'diamond',  size: 4, label: 'I' },
+  zab_newleader:     { color: 'var(--msg-vote)',        shape: 'diamond',  size: 5, label: 'N' },
+  zab_ack_newleader: { color: 'var(--msg-vote)',        shape: 'diamond',  size: 4, label: '' },
+  zab_sync:          { color: 'var(--msg-replication)', shape: 'square',   size: 5, label: 'S' },
+  zab_proposal:      { color: 'var(--msg-replication)', shape: 'square',   size: 6, label: 'P' },
+  zab_ack:           { color: 'var(--msg-replication)', shape: 'square',   size: 4, label: '' },
+  zab_commit:        { color: 'var(--msg-replication)', shape: 'circle',   size: 4, label: 'C' },
+  // EPaxos fast path
+  ep_preaccept:    { color: 'var(--msg-replication)', shape: 'triangle', size: 5, label: 'PA' },
+  ep_preaccept_ok: { color: 'var(--msg-replication)', shape: 'triangle', size: 4, label: '' },
+  // EPaxos slow path
+  ep_accept:       { color: 'var(--msg-vote)',        shape: 'diamond',  size: 6, label: 'A' },
+  ep_accept_ok:    { color: 'var(--msg-vote)',        shape: 'diamond',  size: 4, label: '' },
+  // EPaxos commit
+  ep_commit:       { color: 'var(--msg-replication)', shape: 'circle',   size: 4, label: 'C' },
 };
 
 /** Determine visual key for a message — distinguishes heartbeat from data replication */
@@ -205,6 +232,9 @@ export const ClusterView: React.FC<ClusterViewProps> = React.memo(({
           const cPos = clientPosMap.get(conn.clientId);
           const nPos = nodePositions.get(conn.targetNode);
           if (!cPos || !nPos) return null;
+          // Don't draw connection to dead nodes
+          const connTargetState = nodes.get(conn.targetNode);
+          if (connTargetState?.status === 'dead') return null;
           const color = CONNECTION_COLORS[conn.state] ?? 'var(--msg-client)';
           const isCommitted = conn.state === 'committed';
           return (
@@ -223,6 +253,9 @@ export const ClusterView: React.FC<ClusterViewProps> = React.memo(({
           if (!client.targetNode) return null;
           // Skip if already drawn by clientConnections
           if (clientConnections?.some(c => c.clientId === client.id)) return null;
+          // Don't draw line to dead nodes
+          const targetState = nodes.get(client.targetNode);
+          if (targetState?.status === 'dead') return null;
           const target = nodePositions.get(client.targetNode);
           if (!target) return null;
           return (
@@ -241,7 +274,8 @@ export const ClusterView: React.FC<ClusterViewProps> = React.memo(({
           const to = nodePositions.get(am.message.to) ?? cTo;
           if (!from || !to) return null;
 
-          const totalTime = am.arriveTime - am.sendTime;
+          const deliverTime = am.deliverTime ?? am.arriveTime;
+          const totalTime = deliverTime - am.sendTime;
           if (totalTime <= 0) return null;
           const progress = Math.max(0, Math.min(1, (currentTime - am.sendTime) / totalTime));
 
@@ -295,7 +329,7 @@ export const ClusterView: React.FC<ClusterViewProps> = React.memo(({
                 cx={pos.x} cy={pos.y} r={nodeRadius}
                 fill={isDead ? 'var(--node-dead)' : roleInfo.fill}
                 stroke={isDead ? 'var(--node-dead-stroke)' : roleInfo.stroke}
-                strokeWidth={node.role === 'leader' ? 3 : 2}
+                strokeWidth={node.role === 'leader' || node.role === 'leading' ? 3 : 2}
                 opacity={isDead ? 0.4 : 1}
               />
               {/* Heartbeat arc (leader only) — big green */}
