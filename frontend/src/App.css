@@ -608,6 +608,14 @@ body {
   color: var(--text-muted);
 }
 
+.build-label {
+  font-size: 10px;
+  font-family: 'SF Mono', 'Consolas', monospace;
+  color: var(--text-muted);
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* ===== Panel Legend ===== */
 .panel-legend {
   padding: 6px 8px;
