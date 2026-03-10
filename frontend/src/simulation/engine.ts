@@ -7,7 +7,7 @@ import { ConsensusAlgorithm } from './algorithms/interface';
 import { NetworkModel } from './network';
 import {
   LATENCY_WINDOW_SIZE, CLIENT_RETRY_DELAY_BASE, CLIENT_RETRY_DELAY_JITTER, DEAD_NODE_RETRY_DELAY,
-  METRICS_HISTORY_LIMIT, NODE_LOG_LIMIT,
+  METRICS_HISTORY_LIMIT, NODE_LOG_LIMIT, MESSAGE_EDGE_DELIVERY_FRACTION,
 } from './constants';
 
 let nextEventId = 0;
@@ -23,6 +23,9 @@ function generateMsgId(): string {
 export interface ActiveMessage {
   message: Message;
   sendTime: number;
+  /** Time when message is logically delivered (edge of node) — triggers algorithm processing */
+  deliverTime: number;
+  /** Time when visual animation ends (center of node) — used for cleanup */
   arriveTime: number;
   dropped: boolean;
 }
@@ -209,9 +212,9 @@ export class SimulationEngine {
       const state = this.algorithm.getInitialState(nodeId, this.config);
       this.nodes.set(nodeId, state);
 
-      // Only schedule initial election timeout for algorithms that use elections (Raft).
-      // Paxos has no elections — it schedules proposal timeouts on demand.
-      if (this.algorithm.name !== 'Paxos') {
+      // Schedule initial election timeout for algorithms that use elections.
+      // Paxos and EPaxos schedule timeouts on demand.
+      if (this.algorithm.name !== 'Paxos' && this.algorithm.name !== 'EPaxos') {
         const timeout = this.randomElectionTimeout();
         this.scheduleTimeout(nodeId, 'election', timeout);
       }
@@ -274,10 +277,12 @@ export class SimulationEngine {
 
           const delay = this.network.getDelay(msg.from, msg.to, this.rng);
           const dropped = this.network.isDropped(msg.from, msg.to, this.rng);
+          const deliverTime = this.time + delay * MESSAGE_EDGE_DELIVERY_FRACTION;
 
           const activeMsg: ActiveMessage = {
             message: msg,
             sendTime: this.time,
+            deliverTime,
             arriveTime: this.time + delay,
             dropped,
           };
@@ -286,7 +291,7 @@ export class SimulationEngine {
           if (!dropped) {
             this.insertEvent({
               id: generateEventId(),
-              time: this.time + delay,
+              time: deliverTime,
               type: 'message_arrive',
               target: msg.to,
               payload: { message: msg },
@@ -347,6 +352,7 @@ export class SimulationEngine {
                     this.activeMessages.push({
                       message: respMsg,
                       sendTime: this.time,
+                      deliverTime: this.time + respDelay,
                       arriveTime: this.time + respDelay,
                       dropped: false,
                     });
@@ -408,9 +414,11 @@ export class SimulationEngine {
         const networkDelay = this.network.getDelay(rejectedBy, nextTarget, this.rng);
         const retryDelay = leaderHint ? networkDelay : networkDelay + CLIENT_RETRY_DELAY_BASE + this.rng() * CLIENT_RETRY_DELAY_JITTER;
 
+        const redirectDeliverTime = this.time + retryDelay * MESSAGE_EDGE_DELIVERY_FRACTION;
         this.activeMessages.push({
           message: redirectMsg,
           sendTime: this.time,
+          deliverTime: redirectDeliverTime,
           arriveTime: this.time + retryDelay,
           dropped: false,
         });
@@ -418,7 +426,7 @@ export class SimulationEngine {
         // Re-inject the client request to the new target after delay
         this.insertEvent({
           id: generateEventId(),
-          time: this.time + retryDelay,
+          time: redirectDeliverTime,
           type: 'client_request',
           target: nextTarget,
           payload: { command, clientId: req.clientId },
@@ -545,9 +553,9 @@ export class SimulationEngine {
         this.metrics.nodeEvents.push({ time: this.time, type: 'recovery', nodeId: event.target });
         actions = this.algorithm.onRecovery(node, this.config);
 
-        // Paxos: state transfer — send Learn messages for committed entries the node missed
-        if (this.algorithm.name === 'Paxos') {
-          this.schedulePaxosCatchUp(event.target);
+        // State transfer — send committed entries the node missed (Raft handles this via AppendEntries)
+        if (this.algorithm.name !== 'Raft') {
+          this.scheduleCatchUp(event.target);
         }
         break;
       }
@@ -556,7 +564,7 @@ export class SimulationEngine {
     this.processActions(event.target, actions);
 
     // Track leader changes and current state
-    if (prevRole !== 'leader' && node.role === 'leader') {
+    if (prevRole !== 'leader' && prevRole !== 'leading' && (node.role === 'leader' || node.role === 'leading')) {
       this.liveStats.leaderChanges++;
       this.metrics.leaderChangeTimestamps.push(this.time);
       // Record election duration (from leader loss or simulation start)
@@ -567,7 +575,7 @@ export class SimulationEngine {
     let currentLeader: NodeId | null = null;
     for (const [, n] of this.nodes) {
       if (n.currentTerm > maxTerm) maxTerm = n.currentTerm;
-      if (n.role === 'leader' && n.status === 'alive') currentLeader = n.id;
+      if ((n.role === 'leader' || n.role === 'leading') && n.status === 'alive') currentLeader = n.id;
     }
     this.liveStats.currentTerm = maxTerm;
     this.liveStats.currentLeader = currentLeader;
@@ -658,8 +666,8 @@ export class SimulationEngine {
     return events;
   }
 
-  /** Paxos recovery: find best alive peer and send Learn messages for missing committed log entries */
-  private schedulePaxosCatchUp(recoveredNodeId: NodeId): void {
+  /** Recovery catch-up: find best alive peer and send committed entries the node missed */
+  private scheduleCatchUp(recoveredNodeId: NodeId): void {
     const recoveredNode = this.nodes.get(recoveredNodeId);
     if (!recoveredNode) return;
 
@@ -681,30 +689,52 @@ export class SimulationEngine {
     const knownCommands = new Set(recoveredNode.log.filter(e => e.committed).map(e => e.command));
     const missingEntries = bestPeer.log.filter(e => e.committed && !knownCommands.has(e.command));
 
-    // Schedule Learn messages from bestPeer → recovered node with network delay
+    // Schedule catch-up messages using algorithm-appropriate message type
     for (const entry of missingEntries) {
       const delay = this.network.getDelay(bestPeer.id, recoveredNodeId, this.rng);
-      const learnMsg: Message = {
-        id: generateMsgId(),
-        type: 'learn',
-        from: bestPeer.id,
-        to: recoveredNodeId,
-        term: entry.term,
-        payload: { value: entry.command, proposalNumber: entry.term, commitIndex: entry.index },
-      };
+      const msg = this.buildCatchUpMessage(bestPeer.id, recoveredNodeId, entry);
+      const deliverTime = this.time + delay * MESSAGE_EDGE_DELIVERY_FRACTION;
       this.activeMessages.push({
-        message: learnMsg,
+        message: msg,
         sendTime: this.time,
+        deliverTime,
         arriveTime: this.time + delay,
         dropped: false,
       });
       this.insertEvent({
         id: generateEventId(),
-        time: this.time + delay,
+        time: deliverTime,
         type: 'message_arrive',
         target: recoveredNodeId,
-        payload: { message: learnMsg },
+        payload: { message: msg },
       });
+    }
+  }
+
+  /** Build a catch-up message appropriate for the current algorithm */
+  private buildCatchUpMessage(from: NodeId, to: NodeId, entry: { term: number; index: number; command: string }): Message {
+    const base = { id: generateMsgId(), from, to, term: entry.term };
+    switch (this.algorithm.name) {
+      case 'EPaxos':
+        return {
+          ...base, type: 'ep_commit',
+          payload: {
+            instanceKey: `${from}:recovery_${entry.index}`,
+            command: entry.command, seq: entry.term, deps: [],
+          },
+        };
+      case 'Zab':
+        return {
+          ...base, type: 'zab_sync',
+          payload: {
+            entry: { term: entry.term, index: entry.index, command: entry.command, committed: true },
+          },
+        };
+      default: // Paxos, Multi-Paxos, Raft
+        return {
+          ...base, type: 'learn',
+          payload: { value: entry.command, proposalNumber: entry.term, commitIndex: entry.index },
+        };
     }
   }
 
@@ -755,14 +785,16 @@ export class SimulationEngine {
       term: 0,
       payload: { command },
     };
+    const clientDeliverTime = this.time + delay * MESSAGE_EDGE_DELIVERY_FRACTION;
     this.activeMessages.push({
       message: clientMsg,
       sendTime: this.time,
+      deliverTime: clientDeliverTime,
       arriveTime: this.time + delay,
       dropped: false,
     });
 
-    this.injectEvent('client_request', target, this.time + delay, { command, clientId: cid });
+    this.injectEvent('client_request', target, clientDeliverTime, { command, clientId: cid });
   }
 
   addClient(): string {
@@ -822,8 +854,8 @@ export class SimulationEngine {
     for (const [, n] of this.nodes) {
       if (n.status === 'alive') {
         aliveCount++;
-        if (n.role === 'leader') hasLeader = true;
-        if (n.role === 'candidate') hasCandidate = true;
+        if (n.role === 'leader' || n.role === 'leading') hasLeader = true;
+        if (n.role === 'candidate' || n.role === 'looking') hasCandidate = true;
       }
     }
     const quorumSize = Math.floor(this.config.nodeCount / 2) + 1;

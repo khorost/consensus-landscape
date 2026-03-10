@@ -32,7 +32,10 @@ export default withMermaid(
           text: 'Реализованные алгоритмы',
           items: [
             { text: 'Raft', link: '/algorithms/raft' },
-            { text: 'Paxos', link: '/algorithms/paxos' },
+            { text: 'Basic Paxos', link: '/algorithms/paxos' },
+            { text: 'Multi-Paxos', link: '/algorithms/multi-paxos' },
+            { text: 'Zab (ZooKeeper)', link: '/algorithms/zab' },
+            { text: 'EPaxos', link: '/algorithms/epaxos' },
           ],
         },
         {

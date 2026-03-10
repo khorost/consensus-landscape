@@ -64,7 +64,10 @@ export const SimulationPanel: React.FC<SimulationPanelProps> = ({
             className="select-algorithm"
           >
             <option value="raft">Raft</option>
-            <option value="paxos">Paxos</option>
+            <option value="paxos">Basic Paxos</option>
+            <option value="multi-paxos">Multi-Paxos</option>
+            <option value="zab">Zab (ZooKeeper)</option>
+            <option value="epaxos">EPaxos</option>
           </select>
 
           <select
@@ -151,7 +154,7 @@ export const SimulationPanel: React.FC<SimulationPanelProps> = ({
       </div>
 
       <div className="panel-legend">
-        {algorithmType === 'raft' ? (
+        {algorithmType === 'raft' && (
           <>
             <div className="legend">
               <span className="legend-item"><span className="legend-dot follower" /> Follower</span>
@@ -166,7 +169,8 @@ export const SimulationPanel: React.FC<SimulationPanelProps> = ({
               <span className="legend-item"><span className="legend-shape msg-square-repl" /> Репликация</span>
             </div>
           </>
-        ) : (
+        )}
+        {algorithmType === 'paxos' && (
           <>
             <div className="legend">
               <span className="legend-item"><span className="legend-dot follower" /> Acceptor</span>
@@ -179,6 +183,54 @@ export const SimulationPanel: React.FC<SimulationPanelProps> = ({
               <span className="legend-item"><span className="legend-shape msg-square-accept" /><span className="legend-shape-label">A</span> Accept</span>
               <span className="legend-item"><span className="legend-shape msg-circle" /><span className="legend-shape-label">L</span> Learn</span>
               <span className="legend-item"><span className="legend-shape msg-nack" /> NACK</span>
+            </div>
+          </>
+        )}
+        {algorithmType === 'multi-paxos' && (
+          <>
+            <div className="legend">
+              <span className="legend-item"><span className="legend-dot follower" /> Follower</span>
+              <span className="legend-item"><span className="legend-dot candidate" /> Candidate</span>
+              <span className="legend-item"><span className="legend-dot leader" /> Leader</span>
+              <span className="legend-item"><span className="legend-dot dead" /> Отключён</span>
+            </div>
+            <div className="legend">
+              <span className="legend-item"><span className="legend-shape msg-square-client" /> Клиент</span>
+              <span className="legend-item"><span className="legend-shape msg-diamond" /><span className="legend-shape-label">P</span> Prepare</span>
+              <span className="legend-item"><span className="legend-shape msg-square-accept" /><span className="legend-shape-label">A</span> Accept</span>
+              <span className="legend-item"><span className="legend-shape msg-circle" /> Heartbeat</span>
+              <span className="legend-item"><span className="legend-shape msg-circle" /><span className="legend-shape-label">L</span> Learn</span>
+            </div>
+          </>
+        )}
+        {algorithmType === 'zab' && (
+          <>
+            <div className="legend">
+              <span className="legend-item"><span className="legend-dot candidate" /> Looking</span>
+              <span className="legend-item"><span className="legend-dot follower" /> Following</span>
+              <span className="legend-item"><span className="legend-dot leader" /> Leading</span>
+              <span className="legend-item"><span className="legend-dot dead" /> Отключён</span>
+            </div>
+            <div className="legend">
+              <span className="legend-item"><span className="legend-shape msg-square-client" /> Клиент</span>
+              <span className="legend-item"><span className="legend-shape msg-diamond" /><span className="legend-shape-label">E</span> Election</span>
+              <span className="legend-item"><span className="legend-shape msg-square-repl" /><span className="legend-shape-label">P</span> Proposal</span>
+              <span className="legend-item"><span className="legend-shape msg-circle" /><span className="legend-shape-label">C</span> Commit</span>
+              <span className="legend-item"><span className="legend-shape msg-circle" /> Heartbeat</span>
+            </div>
+          </>
+        )}
+        {algorithmType === 'epaxos' && (
+          <>
+            <div className="legend">
+              <span className="legend-item"><span className="legend-dot follower" /> Replica</span>
+              <span className="legend-item"><span className="legend-dot dead" /> Отключён</span>
+            </div>
+            <div className="legend">
+              <span className="legend-item"><span className="legend-shape msg-square-client" /> Клиент</span>
+              <span className="legend-item"><span className="legend-shape msg-triangle" /> PreAccept (fast)</span>
+              <span className="legend-item"><span className="legend-shape msg-diamond" /><span className="legend-shape-label">A</span> Accept (slow)</span>
+              <span className="legend-item"><span className="legend-shape msg-circle" /><span className="legend-shape-label">C</span> Commit</span>
             </div>
           </>
         )}

@@ -1,6 +1,7 @@
 export type NodeId = string;
 
-export type NodeRole = 'follower' | 'candidate' | 'leader' | 'proposer' | 'acceptor' | 'learner';
+export type NodeRole = 'follower' | 'candidate' | 'leader' | 'proposer' | 'acceptor' | 'learner'
+  | 'looking' | 'leading' | 'following' | 'replica';
 
 export type NodeStatus = 'alive' | 'dead';
 
@@ -42,6 +43,25 @@ export type MessageType =
   | 'accepted'
   | 'nack'
   | 'learn'
+  // Multi-Paxos
+  | 'mp_heartbeat'
+  | 'mp_heartbeat_response'
+  // Zab messages
+  | 'zab_election'
+  | 'zab_election_ack'
+  | 'zab_followerinfo'
+  | 'zab_newleader'
+  | 'zab_ack_newleader'
+  | 'zab_proposal'
+  | 'zab_ack'
+  | 'zab_commit'
+  | 'zab_sync'
+  // EPaxos messages
+  | 'ep_preaccept'
+  | 'ep_preaccept_ok'
+  | 'ep_accept'
+  | 'ep_accept_ok'
+  | 'ep_commit'
   // Client
   | 'client_request'
   | 'client_response';
@@ -55,7 +75,7 @@ export interface Message {
   payload: Record<string, unknown>;
 }
 
-export type TimeoutType = 'election' | 'heartbeat';
+export type TimeoutType = 'election' | 'heartbeat' | 'proposal';
 
 export type EventType =
   | 'message_arrive'
