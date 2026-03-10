@@ -10,6 +10,7 @@ interface ClusterViewProps {
   clients: ClientState[];
   currentTime: number;
   onNodeClick?: (nodeId: NodeId) => void;
+  selectedNode?: NodeId | null;
   timeoutProgress?: TimeoutProgressMap;
   clientConnections?: ClientConnection[];
   autoClientTiming?: Map<string, number>;
@@ -146,7 +147,7 @@ const TimeoutArc = React.memo(function TimeoutArc({ cx, cy, r, progress, color, 
 
 export const ClusterView: React.FC<ClusterViewProps> = React.memo(({
   nodes, activeMessages, clients, currentTime, onNodeClick,
-  timeoutProgress, clientConnections, autoClientTiming,
+  selectedNode, timeoutProgress, clientConnections, autoClientTiming,
   width = 500, height = 400,
 }) => {
   const [zoom, setZoom] = useState(1);
@@ -318,6 +319,7 @@ export const ClusterView: React.FC<ClusterViewProps> = React.memo(({
           const isDead = node.status === 'dead';
           const roleInfo = ROLE_COLORS[node.role] ?? ROLE_COLORS.follower;
           const nodeTimeouts = timeoutProgress?.get(id) ?? [];
+          const isSelected = selectedNode === id;
 
           // Separate heartbeat and election timeouts
           const heartbeat = nodeTimeouts.find(t => t.type === 'heartbeat');
@@ -325,6 +327,17 @@ export const ClusterView: React.FC<ClusterViewProps> = React.memo(({
 
           return (
             <g key={id} onClick={() => onNodeClick?.(id)} style={{ cursor: 'pointer' }}>
+              {/* Selection highlight ring */}
+              {isSelected && (
+                <circle
+                  cx={pos.x} cy={pos.y} r={nodeRadius + 6}
+                  fill="none"
+                  stroke="var(--node-selected, #ff9800)"
+                  strokeWidth={2.5}
+                  opacity={0.9}
+                  className="selected-ring"
+                />
+              )}
               <circle
                 cx={pos.x} cy={pos.y} r={nodeRadius}
                 fill={isDead ? 'var(--node-dead)' : roleInfo.fill}

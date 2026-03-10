@@ -19,6 +19,7 @@
   --node-leader-stroke: #248a3d;
   --node-dead: #8e8e93;
   --node-dead-stroke: #636366;
+  --node-selected: #ff9800;
 
   --msg-vote: #af52de;
   --msg-append: #007aff;
@@ -73,6 +74,7 @@
   --node-leader-stroke: #34c759;
   --node-dead: #636366;
   --node-dead-stroke: #48484a;
+  --node-selected: #ffb340;
 
   --msg-vote: #bf5af2;
   --msg-append: #64d2ff;
@@ -233,6 +235,15 @@ body {
 .cluster-view-wrapper {
   position: absolute;
   inset: 8px;
+}
+
+.selected-ring {
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.4; }
 }
 
 .zoom-controls {

@@ -1,5 +1,7 @@
 # EPaxos (Egalitarian Paxos)
 
+![EPaxos — fast path без лидера](/img/epaxos-fast-path.png)
+
 ## Обзор
 
 EPaxos — leaderless-алгоритм консенсуса, разработанный Moraru, Andersen и Kaminsky в 2013 году. Главная идея: **любой узел может предложить команду**, и в отсутствие конфликтов коммит происходит за **один round-trip** (fast path). При конфликтах используется явное разрешение зависимостей (slow path, 2 RTT).
@@ -142,5 +144,5 @@ EPaxos:       PreAccept → PreAcceptOK = 1 RTT (fast path, без лидера!
 2. **Moraru I., Andersen D., Kaminsky M.** "A Proof of Correctness for Egalitarian Paxos" (2013) — [CMU Technical Report](https://www.cs.cmu.edu/~dga/papers/epaxos-tr.pdf)
 
 ::: tip Попробуйте в симуляторе
-Откройте [симулятор](/consensus-landscape/), поставьте рядом EPaxos и Raft. Отправьте команду в каждый — EPaxos закоммитит за 1 RTT без лидера, Raft потребует 1 RTT но через единственного лидера. Отключите узел в EPaxos — остальные продолжат работать без перевыборов.
+Откройте [симулятор](https://khorost.github.io/consensus-landscape/), поставьте рядом EPaxos и Raft. Отправьте команду в каждый — EPaxos закоммитит за 1 RTT без лидера, Raft потребует 1 RTT но через единственного лидера. Отключите узел в EPaxos — остальные продолжат работать без перевыборов.
 :::

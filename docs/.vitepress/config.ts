@@ -11,7 +11,7 @@ export default withMermaid(
     themeConfig: {
       nav: [
         { text: 'Документация', link: '/' },
-        { text: 'Симулятор', link: '/consensus-landscape/', target: '_self' },
+        { text: 'Симулятор', link: 'https://khorost.github.io/consensus-landscape/' },
       ],
 
       sidebar: [

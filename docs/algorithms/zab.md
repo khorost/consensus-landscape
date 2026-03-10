@@ -1,5 +1,7 @@
 # Zab (ZooKeeper Atomic Broadcast)
 
+![Zab — atomic broadcast с лидером](/img/zab-broadcast.png)
+
 ## Обзор
 
 Zab — протокол atomic broadcast, разработанный для Apache ZooKeeper (2011). Обеспечивает **total order broadcast** — все узлы видят сообщения в одинаковом порядке. Разработан независимо от Raft, но имеет похожую leader-based архитектуру.
@@ -164,5 +166,5 @@ zxid = (epoch, counter)
 3. **Hunt P., Konar M., Junqueira F., Reed B.** "ZooKeeper: Wait-free Coordination for Internet-scale Systems" (2010) — [USENIX ATC](https://www.usenix.org/legacy/event/atc10/tech/full_papers/Hunt.pdf)
 
 ::: tip Попробуйте в симуляторе
-Откройте [симулятор](/consensus-landscape/), поставьте рядом Zab и Raft. Отключите лидера и сравните: в Zab после выборов видна явная фаза синхронизации (Sync → NewLeader → AckNewLeader) перед началом обработки запросов, а в Raft лидер начинает работать сразу.
+Откройте [симулятор](https://khorost.github.io/consensus-landscape/), поставьте рядом Zab и Raft. Отключите лидера и сравните: в Zab после выборов видна явная фаза синхронизации (Sync → NewLeader → AckNewLeader) перед началом обработки запросов, а в Raft лидер начинает работать сразу.
 :::
